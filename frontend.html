@@ -1,0 +1,145 @@
+<html>
+<head>
+  <title>Video Snagger</title>
+  <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700,900" rel="stylesheet">
+  <style>
+    body {
+      padding: 100px;
+    }
+    .panel {
+      padding-bottom: 50px;
+    }
+    * {
+      font-family: "Lato", sans-serif;
+    }
+    ul {
+      margin-left: 0;
+      padding-left: 20px;
+    }
+    li {
+      word-break: break-all;
+      margin-bottom: 20px;
+    }
+    li a {
+      display: block;
+      text-decoration: none;
+      margin-top: 10px;
+      border: 1px solid blue;
+      color: blue;
+      padding: 10px;
+      border-radius: 3px;
+      width: 60px;
+      text-align: center;
+    }
+    .temp {
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="info panel">
+    <h2>Video Snagger</h2>
+    <p>This is a tiny little proxy that will keep an eye out for any .m3u8 files that are being requested and will output them below.</p>
+    <p>It's particularly handy to capture streaming video links from mobile apps and play them on your computer 👍</p>
+  </div>
+  <div class="data panel">
+    <h2>URLs Intercepted</h2>
+    <ul id="links">
+    </ul>
+  </div>
+  <div class="proxyInformation panel">
+    <h2>Proxy Info</h2>
+    <div>Server/Hostname: <span id="ipaddress"></span></div>
+    <div>Port: <span id="port"></span></div>
+  </div>
+  <div class="phoneSetup panel">
+    <h2>Phone Setup</h2>
+    <p>You'll need to set up your phone to use this program as a proxy server.</p>
+    <h3>iOS</h3>
+    <p>Find the wifi settings page, press the info button next to the wifi network, change proxy to manual and fill in the settings above.</p>
+    <img src="./img/ios.png" />
+    <h3>Android</h3>
+    <p>Long tap on your wifi network, select Modify Network, change Proxy to Manual and fill in the Hostname and Port as above.</p>
+    <img src="./img/android.png" />
+    <p><strong>Don't forget to change these settings back after, you'll lose wifi access on your device whenever this app is not running!</strong></p>
+  </div>
+  <textarea class="temp" id="temp"></textarea>
+  <script>
+    var data = {};
+    var url = 'http://127.0.0.1:9876/data';
+
+    // Stole this script from: http://stackoverflow.com/questions/247483/http-get-request-in-javascript
+    function httpGetAsync(theUrl, callback) {
+      var xmlHttp = new XMLHttpRequest();
+      xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+          callback(xmlHttp.responseText);
+        }
+      }
+      xmlHttp.open("GET", theUrl, true); // true for asynchronous
+      xmlHttp.send(null);
+    }
+
+    function refresh() {
+      httpGetAsync(url, function(response) {
+        try {
+          data = JSON.parse(response);
+          renderDOM();
+        }
+        catch(err) {
+
+        }
+        setTimeout(refresh, 1000);
+      });
+    }
+
+    function copyToClipboard(text) {
+      var temp = document.getElementById('temp');
+
+      temp.innerText = text;
+      temp.select();
+
+      try {
+        var status = document.execCommand('copy');
+        if (!status) {
+          console.error("Cannot copy text");
+        }
+        else {
+          console.log("The text is now on the clipboard");
+          alert('Copied to clipboard');
+          return false;
+        }
+      } catch (err) {
+        console.log('Unable to copy.');
+      }
+    }
+
+    function renderDOM() {
+      var portDOM = document.getElementById('port');
+      if (portDOM.innerHTML != data.port) {
+        portDOM.innerHTML = data.port;
+      }
+
+      var ipDOM = document.getElementById('ipaddress');
+      if (ipDOM.innerHTML != data.ipaddress) {
+        ipDOM.innerHTML = data.ipaddress;
+      }
+
+      var links = document.getElementById('links');
+      if (links.childElementCount !== data.videos.length) {
+        links.innerHTML = '';
+
+        for (var i = 0; i < data.videos.length; i ++ ) {
+          console.log('video');
+          var element = document.createElement("LI")
+          element.innerHTML = '<span>' + data.videos[i] + '</span><a href="#!" onClick="copyToClipboard(\''+data.videos[i]+'\');">COPY</a>';
+          links.appendChild(element);
+        }
+      }
+    }
+
+    refresh();
+
+  </script>
+</body>
+</html>
