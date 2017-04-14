@@ -57,6 +57,7 @@ typings/
 # dotenv environment variables file
 .env
 
-# Ignore all of the dist files except dmg
-dist
-!dist/*.dmg
+# Ignore all of the dist files except zip and github
+dist/*
+!dist/*.zip
+!dist/github
